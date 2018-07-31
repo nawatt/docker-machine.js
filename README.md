@@ -3,7 +3,7 @@ docker-machine API / command wrapper for nodejs (supports promises)
 
 ## Usage
 
-```
+```js
 const machine = require('../lib/docker-machine')
 
 
