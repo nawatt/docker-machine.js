@@ -29,67 +29,105 @@ function cmd (line) {
   })
 }
 
-const lsTemplate = ['Name', 'State', 'Url'].map((k) => `"${k}": "{{.${k}}}"`).join(', ')
-
 const machine = {
 
-  ls: () => cmd(`docker-machine ls --format '${{lsTemplate}}'`),
+    ls: function () {
+        const template = ["Name", "State", "URL"].map((k) => `"${k}": "{{.${k}}}"`).join(', ')
+        return cmd(`docker-machine ls --format '{ ${template} }'`)
+            .then((stdout) =>
+                stdout.split('\n')
+                    .map(r => safeParse(r))
+                    .filter( r => r != null )
+            )
+    },
 
-  find: (name) => this.ls().then(r => r.find(e => e.Name === name)),
+    find: function(name) {
+        this.ls()
+            .then((r) => r.find((e) => e['Name'] == name))
+    },
 
-  exist: function (name) {
-    return new Promise((resolve) => {
-      this.inspect(name)
-        .then((json) => resolve(json))
-        .catch(() => resolve(false))
-    })
-  },
+    exist: function(name) {
+        return new Promise((resolve) => {
+            this.inspect(name)
+                .then((json) => resolve(json))
+                .catch(() => resolve(false))
+        })
+    },
 
-  create: function (machineName, options) {
-    const flags = Object.keys(options)
-      .map((k) => `--${k} ${quotifyArg(options[k])}`)
-      .join(' ')
+    create: function (machineName, options) {
+        const flags = Object.keys(options)
+            .map((k) => `--${k} ${quotifyArg(options[k])}`)
+            .join(' ')
 
-    return cmd(`docker-machine create ${flags} ${machineName}`)
-  },
+        return cmd(`docker-machine create ${flags} ${machineName}`)
+    },
 
-  rm: (machineName) => cmd('docker-machine rm -y ' + machineName),
+    rm: function (machineName) {
+        return cmd('docker-machine rm -y ' + machineName)
+    },
 
-  active: () => cmd('docker-machine active'),
+    active: function () {
+        return cmd('docker-machine active')
+    },
 
-  inspect: (machineName) => cmd(`docker-machine inspect ${machineName}`).then(safeParse),
+    inspect: function (machineName) {
+        return cmd('docker-machine inspect ' + machineName)
+            .then((stdout) => safeParse(stdout))
+    },
 
-  provision: (machineName) => cmd(`docker-machine provision ${machineName}`),
+    provision: function (machineName) {
+        return cmd('docker-machine provision ' + machineName)
+    },
 
-  regenerateCerts: (machineName) => cmd(`docker-machine regenerate-certs -f ${machineName}`),
+    regenerateCerts: function (machineName) {
+        return cmd('docker-machine regenerate-certs -f ' + machineName)
+    },
 
-  kill: (machineName) => cmd(`docker-machine kill ${machineName}`),
+    kill: function (machineName) {
+        return cmd('docker-machine kill ' + machineName)
+    },
 
-  start: (machineName) => cmd(`docker-machine start ${machineName}`),
+    start: function (machineName) {
+        return cmd('docker-machine start ' + machineName)
+    },
 
-  stop: (machineName) => cmd(`docker-machine stop ${machineName}`),
+    stop: function (machineName) {
+        return cmd('docker-machine stop ' + machineName)
+    },
 
-  restart: (machineName) => cmd(`docker-machine restart ${machineName}`),
+    restart: function (machineName) {
+        return cmd('docker-machine restart ' + machineName)
+    },
 
-  upgrade: (machineName) => cmd(`docker-machine upgrade ${machineName}`),
+    upgrade: function (machineName) {
+        return cmd('docker-machine upgrade ' + machineName)
+    },
 
-  ssh: (machineName, command) => cmd(`docker-machine ssh ${machineName} ${command}`),
+    ssh: function (machineName, command) {
+        return cmd('docker-machine ssh ' + machineName + ' ' + command)
+    },
 
-  scp: (path1, path2) => cmd(`docker-machine scp ${path1} ${path2}`),
+    scp: function (path1, path2) {
+        return cmd(`docker-machine scp ${path1} ${path2}`)
+    },
 
-  url: (machineName) => cmd(`docker-machine url ${machineName}`),
+    url: function (machineName) {
+        return cmd('docker-machine url ' + machineName)
+    },
 
-  ip: (machineName) => cmd('docker-machine ip ' + machineName).then((stdout) => stdout.trim()),
-
-  status: function (machineName) {
-    return new Promise((resolve) => {
-      cmd('docker-machine status ' + machineName)
-        .then((stdout) => stdout.toLowerCase())
-        .then((stdout) => stdout.trim())
-        .then((status) => resolve(status))
-        .catch(() => resolve('unreachable'))
-    })
-  }
+    ip: function (machineName) {
+        return cmd('docker-machine ip ' + machineName)
+            .then((stdout) => stdout.trim())
+    },
+    status: function(machineName) {
+        return new Promise((resolve) => {
+            cmd('docker-machine status ' + machineName)
+                .then((stdout) => stdout.toLowerCase())
+                .then((stdout) => stdout.trim())
+                .then((status) => resolve(status))
+                .catch(() => resolve('inactive'))
+        })
+    }
 }
 
 module.exports = machine
