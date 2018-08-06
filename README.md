@@ -18,8 +18,8 @@ function async createMyMachine() {
   }
   await machine.create('mymachine', options)
   
-  const data = machine.inspect()
-  const ip = machine.ip()
+  const data = await machine.inspect()
+  const ip = await machine.ip()
   // ...
   // ...
 }
